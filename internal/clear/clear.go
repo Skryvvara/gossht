@@ -9,17 +9,16 @@ import (
 var clear map[string]func() //create a map for storing clear funcs
 
 func init() {
-	clear = make(map[string]func()) //Initialize it
-	clear["linux"] = func() {
+	clear_nix := func() {
 		cmd := exec.Command("clear") //Linux example, its tested
 		cmd.Stdout = os.Stdout
 		cmd.Run()
 	}
-	clear["darwin"] = func() {
-		cmd := exec.Command("clear")
-		cmd.Stdout = os.Stdout
-		cmd.Run()
-	}
+
+	clear = make(map[string]func()) //Initialize it
+	clear["linux"] = clear_nix
+	clear["freebsd"] = clear_nix
+	clear["darwin"] = clear_nix
 	clear["windows"] = func() {
 		cmd := exec.Command("cmd", "/c", "cls") //Windows example, its tested
 		cmd.Stdout = os.Stdout
