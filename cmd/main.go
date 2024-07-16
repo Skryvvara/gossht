@@ -8,11 +8,15 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
+	"github.com/skryvvara/gossht/internal/clear"
 	"github.com/skryvvara/gossht/internal/ssh"
 )
 
 var (
-	table *tview.Table
+	table   *tview.Table
+	Version string // This is set during build time
+
+	AccentColor int32 = 0x324191
 )
 
 func main() {
@@ -28,17 +32,36 @@ func StartTUI() {
 
 	// Create a box for the title
 	title := tview.NewTextView().
-		SetText("SSH Config").
+		SetText("SSH Config " + Version).
 		SetTextAlign(tview.AlignCenter).
 		SetTextColor(tview.Styles.PrimaryTextColor).
 		SetDynamicColors(true) // Optional: enable dynamic colors
 
 	// Create a new table
 	table = tview.NewTable().
-		SetBorders(true).
+		SetSeparator('|').
 		SetSelectable(true, false).
 		SetFixed(1, 1).
-		SetEvaluateAllRows(true) // Evaluate all rows for width calculation
+		SetEvaluateAllRows(true)
+
+	table.SetTitle("Connections").SetBorder(true)
+
+	// Customize the selected cell style
+	selectedStyle := tcell.StyleDefault.
+		Background(tcell.ColorDarkGray).
+		Foreground(tcell.ColorWhite).
+		Attributes(tcell.AttrBold)
+
+	table.SetSelectedStyle(selectedStyle)
+
+	//table.SetBorderPadding(0, 0, 1, 0)
+
+	// Stop the application if ESCAPE has been pressed
+	table.SetDoneFunc(func(key tcell.Key) {
+		if key == tcell.KeyEscape {
+			app.Stop()
+		}
+	})
 
 	loadSSHConfig()
 
@@ -52,24 +75,39 @@ func StartTUI() {
 
 			app.Stop()
 
+			clear.CallClear()
 			ssh.SSHConnect(name+":22", user)
+			clear.CallClear()
 
 			StartTUI()
 		})
 
 	// Add headers with styling
 	headerCell := func(text string) *tview.TableCell {
-		return tview.NewTableCell(text).SetAlign(tview.AlignCenter).SetSelectable(false).
-			SetBackgroundColor(tcell.ColorDarkCyan).SetTextColor(tcell.ColorWhite).SetAttributes(tcell.AttrBold)
+		return tview.NewTableCell(text).SetSelectable(false).
+			SetBackgroundColor(tcell.NewHexColor(AccentColor)).SetTextColor(tcell.ColorWhite).SetAttributes(tcell.AttrBold)
 	}
 
 	table.SetCell(0, 0, headerCell("Host"))
 	table.SetCell(0, 1, headerCell("HostName"))
 	table.SetCell(0, 2, headerCell("User"))
 
+	infoBox := tview.NewGrid()
+
+	infoBox.SetBorder(true).SetTitle("Info")
+
+	//TODO: Remove this later
+	infoBox.AddItem(tview.NewTextView().SetText("<ESC>: Quit Application"), 0, 0, 1, 1, 1, 1, false)
+	infoBox.AddItem(tview.NewTextView().SetText("<ENTER>: Connect to the selected entry"), 1, 0, 1, 1, 1, 1, false)
+	infoBox.AddItem(tview.NewTextView().SetText("<CTRL+E>: Edit Entry (Not yet implemented)"), 2, 0, 1, 1, 1, 1, false)
+	infoBox.AddItem(tview.NewTextView().SetText("<CTRL+N>: New Entry (Not yet implemented)"), 0, 1, 1, 1, 1, 1, false)
+	infoBox.AddItem(tview.NewTextView().SetText("<CTRL+D>: Delete Entry (Not yet implemented)"), 1, 1, 1, 1, 1, 1, false)
+	infoBox.AddItem(tview.NewTextView().SetText("<CTRL+U>: Duplicate Entry (Not yet implemented)"), 2, 1, 1, 1, 1, 1, false)
+
 	// Add title and table to the flex container
 	flex.AddItem(title, 1, 1, false).
-		AddItem(table, 0, 1, true)
+		AddItem(infoBox, 5, 1, false).
+		AddItem(table, 0, 8, true)
 
 	// Set the root flex container
 	if err := app.SetRoot(flex, true).Run(); err != nil {
@@ -122,15 +160,16 @@ func loadSSHConfig() {
 
 func addHostEntryToTable(row int, host, name, user string) {
 	// Normal cell style
-	cellStyle := tview.NewTableCell(host).
-		SetAlign(tview.AlignCenter).
-		SetSelectable(true).
-		SetTextColor(tcell.ColorWhite).
-		SetBackgroundColor(tcell.ColorBlack).
-		SetExpansion(1) // Expand to fill available width
+	tableCell := func(content string) *tview.TableCell {
+		return tview.NewTableCell(content).
+			SetSelectable(true).
+			SetTextColor(tcell.ColorWhite).
+			SetBackgroundColor(tcell.ColorBlack).
+			SetExpansion(1) // Expand to fill available width
+	}
 
 	// Add the cell to the table
-	table.SetCell(row, 0, cellStyle)
-	table.SetCell(row, 1, tview.NewTableCell(name).SetAlign(tview.AlignCenter).SetSelectable(true).SetTextColor(tcell.ColorWhite).SetBackgroundColor(tcell.ColorBlack).SetExpansion(1))
-	table.SetCell(row, 2, tview.NewTableCell(user).SetAlign(tview.AlignCenter).SetSelectable(true).SetTextColor(tcell.ColorWhite).SetBackgroundColor(tcell.ColorBlack).SetExpansion(1))
+	table.SetCell(row, 0, tableCell(host))
+	table.SetCell(row, 1, tableCell(name))
+	table.SetCell(row, 2, tableCell(user))
 }

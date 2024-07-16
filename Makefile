@@ -1,11 +1,13 @@
 PROJECT_NAME := gossht
 CMD_DIR := ./cmd
 
+VERSION := v0.0.1-dev
+
 GO := go
 PLATFORMS := linux darwin windows freebsd
 ARCHS := amd64 arm64
 
-GOFLAGS := -ldflags "-s -w"
+GOFLAGS := -ldflags "-s -w -X main.Version=$(VERSION)"
 
 BIN_DIR := ./bin
 
@@ -53,6 +55,12 @@ build-$(1)-$(2):
 endef
 
 $(foreach platform,$(PLATFORMS),$(foreach arch,$(ARCHS),$(eval $(call BUILD_template,$(platform),$(arch)))))
+
+.PHONY: vendor
+vendor:
+	@go mod tidy
+	@GOFLAGS="-mod=readonly" go mod vendor
+	rm go.sum
 
 # Clean build artifacts
 clean:
