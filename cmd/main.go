@@ -63,6 +63,24 @@ func StartTUI() {
 		}
 	})
 
+	// Register key events
+	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		k := event.Key()
+
+		switch k {
+		case tcell.KeyCtrlE: // Edit Entry
+			app.Stop()
+		case tcell.KeyCtrlN: // New Entry
+			app.Stop()
+		case tcell.KeyCtrlD: // Delete Entry
+			app.Stop()
+		case tcell.KeyCtrlU: // Duplicate Entry
+			app.Stop()
+		}
+
+		return event
+	})
+
 	loadSSHConfig()
 
 	// Set selection handler for the table
