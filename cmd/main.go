@@ -16,7 +16,7 @@ var (
 	table   *tview.Table
 	Version string // This is set during build time
 
-	AccentColor int32 = 0x324191
+	AccentColor tcell.Color = tcell.NewHexColor(0x324191)
 )
 
 func main() {
@@ -69,7 +69,39 @@ func StartTUI() {
 
 		switch k {
 		case tcell.KeyCtrlE: // Edit Entry
-			app.Stop()
+			x, _ := table.GetSelection()
+
+			name := table.GetCell(x, 0).Text
+			hostname := table.GetCell(x, 1).Text
+			user := table.GetCell(x, 2).Text
+
+			title := fmt.Sprintf("Edit entry %s", name)
+
+			formFlex := tview.NewFlex()
+
+			form := tview.NewForm().
+				AddInputField("Name", name, 20, nil, nil).
+				AddInputField("Hostname", hostname, 20, nil, nil).
+				AddInputField("User", user, 20, nil, nil).
+				AddTextArea("Notes", "", 40, 0, 0, nil).
+				AddPasswordField("Password", "", 10, '*', nil).
+				AddInputField("SSH-Key path", "", 20, nil, nil).
+				AddButton("Save", nil).
+				AddButton("Quit", func() {
+					app.SetRoot(flex, true)
+				})
+
+			form.SetLabelColor(tcell.ColorWhite).
+				SetFieldBackgroundColor(AccentColor).
+				SetFieldTextColor(tcell.ColorWhite).
+				SetButtonBackgroundColor(AccentColor).
+				SetButtonTextColor(tcell.ColorWhite)
+
+			form.SetTitle(title).SetBorder(true)
+
+			formFlex.AddItem(form, 0, 1, true)
+
+			app.SetRoot(formFlex, true)
 		case tcell.KeyCtrlN: // New Entry
 			app.Stop()
 		case tcell.KeyCtrlD: // Delete Entry
@@ -103,7 +135,7 @@ func StartTUI() {
 	// Add headers with styling
 	headerCell := func(text string) *tview.TableCell {
 		return tview.NewTableCell(text).SetSelectable(false).
-			SetBackgroundColor(tcell.NewHexColor(AccentColor)).SetTextColor(tcell.ColorWhite).SetAttributes(tcell.AttrBold)
+			SetBackgroundColor(AccentColor).SetTextColor(tcell.ColorWhite).SetAttributes(tcell.AttrBold)
 	}
 
 	table.SetCell(0, 0, headerCell("Host"))
