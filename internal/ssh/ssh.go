@@ -115,15 +115,16 @@ func SSHConnect(host, user string) {
 		log.Fatal("failed to start shell: ", err)
 	}
 
-	// Handle terminal resizing
-	go func() {
-		sigCh := make(chan os.Signal, 1)
-		signal.Notify(sigCh, syscall.SIGWINCH)
-		for range sigCh {
-			width, height, _ := term.GetSize(fd)
-			session.WindowChange(height, width)
-		}
-	}()
+	/*
+		// Handle terminal resizing
+		go func() {
+			sigCh := make(chan os.Signal, 1)
+			signal.Notify(sigCh, syscall.SIGWINCH)
+			for range sigCh {
+				width, height, _ := term.GetSize(fd)
+				session.WindowChange(height, width)
+			}
+		}() */
 
 	// Handle termination signals
 	signalCh := make(chan os.Signal, 1)
