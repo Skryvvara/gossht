@@ -20,6 +20,30 @@ Gossht is a graphical ssh helper written in [Go](https://go.dev) using [tview](h
 You can build gossht using make, all the dependencies are in the vendor directory so not even an internet
 connection is required to build gossht.
 
+First, verify that go and make is installed
+
+```sh
+go version
+
+# example
+#❯ go version
+#go version go1.22.5 darwin/arm64
+
+make --version
+
+# example
+#❯ make --version
+#GNU Make 3.81
+#Copyright (C) 2006  Free Software Foundation, Inc.
+#This is free software; see the source for copying conditions.
+#There is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A
+#PARTICULAR PURPOSE.
+#
+#This program built for i386-apple-darwin11.3.0
+```
+
+now either let the makefile automatically determine your platform and architecture
+
 ```sh
 make build
 ./bin/<platform>-<arch>
@@ -56,6 +80,17 @@ make
 #GOOS=freebsd GOARCH=amd64 go build -ldflags "-s -w" -o ./bin/gossht-freebsd-amd64 ./cmd
 #Building for freebsd-arm64
 #GOOS=freebsd GOARCH=arm64 go build -ldflags "-s -w" -o ./bin/gossht-freebsd-arm64 ./cmd
+```
+
+alternatively you can build the binary for the exact platform and architecture you want
+
+```sh
+make build-<platform>-<arch>
+
+#example
+#❯ make build-windows-amd64
+#Building for windows-amd64
+#GOOS=windows GOARCH=amd64 go build -ldflags "-s -w -X main.Version=v0.0.1-dev" -o ./bin/gossht-windows-amd64.exe ./cmd
 ```
 
 ## License
