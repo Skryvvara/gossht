@@ -13,6 +13,7 @@ import (
 )
 
 var (
+	flex    *tview.Flex
 	table   *tview.Table
 	Version string // This is set during build time
 
@@ -28,7 +29,7 @@ func StartTUI() {
 	app := tview.NewApplication()
 
 	// Create a flex container
-	flex := tview.NewFlex().SetDirection(tview.FlexRow)
+	flex = tview.NewFlex().SetDirection(tview.FlexRow)
 
 	// Create a box for the title
 	title := tview.NewTextView().
@@ -69,41 +70,9 @@ func StartTUI() {
 
 		switch k {
 		case tcell.KeyCtrlE: // Edit Entry
-			x, _ := table.GetSelection()
-
-			name := table.GetCell(x, 0).Text
-			hostname := table.GetCell(x, 1).Text
-			user := table.GetCell(x, 2).Text
-
-			title := fmt.Sprintf("Edit entry %s", name)
-
-			formFlex := tview.NewFlex()
-
-			form := tview.NewForm().
-				AddInputField("Name", name, 20, nil, nil).
-				AddInputField("Hostname", hostname, 20, nil, nil).
-				AddInputField("User", user, 20, nil, nil).
-				AddTextArea("Notes", "", 40, 0, 0, nil).
-				AddPasswordField("Password", "", 10, '*', nil).
-				AddInputField("SSH-Key path", "", 20, nil, nil).
-				AddButton("Save", nil).
-				AddButton("Quit", func() {
-					app.SetRoot(flex, true)
-				})
-
-			form.SetLabelColor(tcell.ColorWhite).
-				SetFieldBackgroundColor(AccentColor).
-				SetFieldTextColor(tcell.ColorWhite).
-				SetButtonBackgroundColor(AccentColor).
-				SetButtonTextColor(tcell.ColorWhite)
-
-			form.SetTitle(title).SetBorder(true)
-
-			formFlex.AddItem(form, 0, 1, true)
-
-			app.SetRoot(formFlex, true)
+			loadForm(app, true)
 		case tcell.KeyCtrlN: // New Entry
-			app.Stop()
+			loadForm(app, false)
 		case tcell.KeyCtrlD: // Delete Entry
 			app.Stop()
 		case tcell.KeyCtrlU: // Duplicate Entry
@@ -163,6 +132,50 @@ func StartTUI() {
 	if err := app.SetRoot(flex, true).Run(); err != nil {
 		panic(err)
 	}
+}
+
+func loadForm(app *tview.Application, preload bool) {
+	var name string
+	var hostname string
+	var user string
+	var title string
+
+	if preload {
+		x, _ := table.GetSelection()
+
+		name = table.GetCell(x, 0).Text
+		hostname = table.GetCell(x, 1).Text
+		user = table.GetCell(x, 2).Text
+		title = fmt.Sprintf("Edit entry %s", name)
+	} else {
+		title = "New entry"
+	}
+
+	formFlex := tview.NewFlex()
+
+	form := tview.NewForm().
+		AddInputField("Name", name, 20, nil, nil).
+		AddInputField("Hostname", hostname, 20, nil, nil).
+		AddInputField("User", user, 20, nil, nil).
+		AddTextArea("Notes", "", 40, 0, 0, nil).
+		AddPasswordField("Password", "", 10, '*', nil).
+		AddInputField("SSH-Key path", "", 20, nil, nil).
+		AddButton("Save", nil).
+		AddButton("Quit", func() {
+			app.SetRoot(flex, true)
+		})
+
+	form.SetLabelColor(tcell.ColorWhite).
+		SetFieldBackgroundColor(AccentColor).
+		SetFieldTextColor(tcell.ColorWhite).
+		SetButtonBackgroundColor(AccentColor).
+		SetButtonTextColor(tcell.ColorWhite)
+
+	form.SetTitle(title).SetBorder(true)
+
+	formFlex.AddItem(form, 0, 1, true)
+
+	app.SetRoot(formFlex, true)
 }
 
 func loadSSHConfig() {
