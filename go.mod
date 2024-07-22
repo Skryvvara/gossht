@@ -1,6 +1,6 @@
 module github.com/skryvvara/gossht
 
-go 1.22.5
+go 1.22
 
 require (
 	github.com/gdamore/tcell/v2 v2.7.1
