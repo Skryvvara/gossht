@@ -4,7 +4,7 @@ CMD_DIR := ./cmd
 VERSION := v0.0.1-dev
 
 GO := go
-PLATFORMS := linux darwin windows freebsd
+PLATFORMS := darwin freebsd linux windows
 ARCHS := amd64 arm64
 
 GOFLAGS := -ldflags "-s -w -X main.Version=$(VERSION)"
@@ -39,22 +39,39 @@ else
     endif
 endif
 
-.PHONY: all clean $(foreach platform, $(PLATFORMS), $(foreach arch, $(ARCHS), build-$(platform)-$(arch)))
-
 # Default target
-all: $(foreach platform, $(PLATFORMS), $(foreach arch, $(ARCHS), build-$(platform)-$(arch)))
+all: clean build
 
 .PHONY: build
-build: clean build-$(MACHINE)
+build: clean
+	$(GO) build $(GOFLAGS) -o $(BIN_DIR)/$(PROJECT_NAME) $(CMD_DIR)
 
-# Build targets for each platform-architecture combination
-define BUILD_template
-build-$(1)-$(2):
-	@echo "Building for $(1)-$(2)"
-	GOOS=$(1) GOARCH=$(2) $(GO) build $(GOFLAGS) -o $(BIN_DIR)/$(PROJECT_NAME)-$(1)-$(2)$(if $(findstring windows,$(1)),.exe) $(CMD_DIR)
-endef
+.PHONY: build-all
+build-all: clean build-darwin build-freebsd build-linux build-windows
 
-$(foreach platform,$(PLATFORMS),$(foreach arch,$(ARCHS),$(eval $(call BUILD_template,$(platform),$(arch)))))
+.PHONY: build-darwin
+build-darwin: clean
+	@echo "Building for darwin"
+	GOOS=darwin GOARCH=amd64 $(GO) build $(GOFLAGS) -o $(BIN_DIR)/$(PROJECT_NAME)-darwin-amd64 $(CMD_DIR)
+	GOOS=darwin GOARCH=arm64 $(GO) build $(GOFLAGS) -o $(BIN_DIR)/$(PROJECT_NAME)-darwin-arm64 $(CMD_DIR)
+
+.PHONY: build-freebsd
+build-freebsd: clean
+	@echo "Building for freeBSD"
+	GOOS=freebsd GOARCH=amd64 $(GO) build $(GOFLAGS) -o $(BIN_DIR)/$(PROJECT_NAME)-freebsd-amd64 $(CMD_DIR)
+	GOOS=freebsd GOARCH=arm64 $(GO) build $(GOFLAGS) -o $(BIN_DIR)/$(PROJECT_NAME)-freebsd-arm64 $(CMD_DIR)
+
+.PHONY: build-linux
+build-linux: clean
+	@echo "Building for linux"
+	GOOS=linux GOARCH=amd64 $(GO) build $(GOFLAGS) -o $(BIN_DIR)/$(PROJECT_NAME)-linux-amd64 $(CMD_DIR)
+	GOOS=linux GOARCH=arm64 $(GO) build $(GOFLAGS) -o $(BIN_DIR)/$(PROJECT_NAME)-linux-arm64 $(CMD_DIR)
+
+.PHONY: build-windows
+build-windows: clean
+	@echo "Building for windows"
+	GOOS=windows GOARCH=amd64 $(GO) build $(GOFLAGS) -o $(BIN_DIR)/$(PROJECT_NAME)-windows-amd64.exe $(CMD_DIR)
+	GOOS=windows GOARCH=arm64 $(GO) build $(GOFLAGS) -o $(BIN_DIR)/$(PROJECT_NAME)-windows-arm64.exe $(CMD_DIR)
 
 .PHONY: vendor
 vendor:
