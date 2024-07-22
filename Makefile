@@ -11,34 +11,6 @@ GOFLAGS := -ldflags "-s -w -X main.Version=$(VERSION)"
 
 BIN_DIR := ./bin
 
-ifeq ($(OS),Windows_NT)
-    PLATFORM = windows
-    ifeq ($(PROCESSOR_ARCHITECTURE),AMD64)
-        MACHINE = $(PLATFORM)-amd64
-    endif
-    ifeq ($(PROCESSOR_ARCHITECTURE),ARM64)
-        MACHINE = $(PLATFORM)-arm64
-    endif
-else
-    UNAME_S := $(shell uname -s)
-    ifeq ($(UNAME_S),Linux)
-        PLATFORM = linux
-    endif
-    ifeq ($(UNAME_S),Darwin)
-        PLATFORM = darwin
-    endif
-    ifeq ($(UNAME_S),FreeBSD)
-        PLATFORM = freebsd
-    endif
-    UNAME_P := $(shell uname -p)
-    ifeq ($(UNAME_P),x86_64)
-        MACHINE += $(PLATFORM)-amd64
-    endif
-    ifeq ($(UNAME_P),arm)
-        MACHINE = $(PLATFORM)-arm64
-    endif
-endif
-
 # Default target
 all: clean build
 
